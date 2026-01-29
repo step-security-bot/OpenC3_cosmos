@@ -696,7 +696,7 @@ export default {
         this.loadingTlmData = true
         loadingFirstTlm = true
       }
-      this.updater = setInterval(() => {
+      const update = () => {
         if (!this.targetName || !this.packetName) {
           if (loadingFirstTlm) {
             loadingFirstTlm = false
@@ -802,7 +802,9 @@ export default {
           loadingFirstTlm = false
           this.loadingTlmData = false
         }
-      }, this.refreshInterval)
+      }
+      update() // Fetch immediately
+      this.updater = setInterval(update, this.refreshInterval)
     },
     resetConfig: function () {
       this.refreshInterval = 1000
