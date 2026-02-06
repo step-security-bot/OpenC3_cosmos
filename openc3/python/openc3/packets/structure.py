@@ -1,4 +1,4 @@
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -318,7 +318,7 @@ class Structure:
             # Need to allocate space for the variable length item if its minimum size is greater than zero
             if item.variable_bit_size:
                 minimum_data_bits = 0
-                if (item.data_type == "INT" or item.data_type == "UINT") and not item.original_array_size:
+                if (item.data_type == "INT" or item.data_type == "UINT") and item.original_array_size is None:
                     # Minimum QUIC encoded integer, see https://datatracker.ietf.org/doc/html/rfc9000#name-variable-length-integer-enc
                     minimum_data_bits = 6
                 # STRING, BLOCK, or array item
