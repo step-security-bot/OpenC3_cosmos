@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 
-# Copyright 2022 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -27,7 +27,7 @@ class ConfigEventsChannel < ApplicationCable::Channel
 
   def unsubscribed
     subscription_key = "config_events_#{uuid}"
-    if @broadcasters[subscription_key]
+    if @@broadcasters[subscription_key]
       stop_stream_from subscription_key
       @@broadcasters[subscription_key].kill
       @@broadcasters[subscription_key] = nil

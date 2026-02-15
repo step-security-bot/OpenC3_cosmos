@@ -13,7 +13,7 @@
 # GNU Affero General Public License for more details.
 #
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 */
 
@@ -43,13 +43,13 @@ test('open a file', async ({ page, utils }) => {
   await page.locator('text=Open File').click()
   await utils.sleep(500) // Allow background data to fetch
   await expect(page.getByText('INST2', { exact: true })).toBeVisible()
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('[data-test=file-open-save-search] input').fill('dis')
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('[data-test=file-open-save-search] input').fill('con')
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('[data-test=file-open-save-search] input').fill('nect')
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('text=disconnect >> nth=0').click() // nth=0 because INST, INST2
   await page.locator('[data-test=file-open-save-submit-btn]').click()
   await expect(page.locator('.v-dialog')).not.toBeVisible()
@@ -67,11 +67,11 @@ test('open a file', async ({ page, utils }) => {
   await page.locator('text=Open File').click()
   await utils.sleep(500) // Allow background data to fetch
   await expect(page.getByText('INST2', { exact: true })).toBeVisible()
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('[data-test=file-open-save-search] input').fill('meta')
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('[data-test=file-open-save-search] input').fill('data')
-  await utils.sleep(100)
+  await utils.sleep(200)
   await page.locator('text=metadata >> nth=1').click() // nth=0 because INST, INST2
   await page.locator('[data-test=file-open-save-submit-btn]').click()
   await expect(page.locator('.v-dialog')).not.toBeVisible()
@@ -164,12 +164,16 @@ test('handles File Save overwrite', async ({ page, utils }) => {
   await page.locator('textarea').fill('# comment1')
   await page.locator('[data-test=script-runner-file]').click()
   await page.locator('text=Save File').click()
+  // Wait for save to complete before continuing
+  await expect(page.getByText('Saving...')).not.toBeVisible()
   await page.locator('textarea').fill('# comment2')
   if (process.platform === 'darwin') {
     await page.locator('textarea').press('Meta+S') // Ctrl-S save
   } else {
     await page.locator('textarea').press('Control+S') // Ctrl-S save
   }
+  // Wait for save to complete before continuing
+  await expect(page.getByText('Saving...')).not.toBeVisible()
 
   // File->Save As
   await page.locator('[data-test=script-runner-file]').click()

@@ -13,7 +13,7 @@
 # GNU Affero General Public License for more details.
 #
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 */
 
@@ -347,6 +347,8 @@ class TestSuite(Suite):
     expect(contents).toContain('Fail: 0')
   })
 
+  // Wait for the download menu to fully close before reopening
+  await expect(page.locator('text=Download as Text')).not.toBeVisible()
   await page
     .locator('[data-test="completed-scripts"] >> tr >> nth=1')
     .getByRole('button')

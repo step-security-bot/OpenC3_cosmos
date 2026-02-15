@@ -1,5 +1,5 @@
 /*
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -52,6 +52,7 @@ export default class ScreenCompleter {
   }
 
   async getCompletions(editor, session, pos, prefix, callback) {
+    if (!this.autocompleteData) return callback(null, [])
     let line = session.getLine(pos.row)
     let lineBefore = line.slice(0, pos.column)
     let parsedLine = lineBefore.trimStart().split(/ (?![^<]*>)/)

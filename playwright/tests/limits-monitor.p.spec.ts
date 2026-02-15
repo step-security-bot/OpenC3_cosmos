@@ -13,7 +13,7 @@
 # GNU Affero General Public License for more details.
 #
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 */
 
@@ -124,6 +124,7 @@ test('saves, opens, and resets the configuration', async ({ page, utils }) => {
   await page.locator('text=Save Configuration').click()
   await page.getByLabel('Configuration Name').fill('playwright')
   await page.locator('button:has-text("Ok")').click()
+  await page.getByRole('button', { name: 'Dismiss' }).click({ timeout: 20000 })
 
   await page.locator('[data-test=limits-monitor-file]').click()
   await page.locator('text=Open Configuration').click()
@@ -332,14 +333,14 @@ test('displays the limits log', async ({ page, utils }) => {
   )
   // These have long timeouts just to allow the demo to hit another limit
   await expect(page.locator('[data-test=limits-events]')).toContainText('RED', {
-    timeout: 15000,
+    timeout: 20000,
   })
   await expect(page.locator('[data-test=limits-events]')).toContainText(
     'YELLOW',
-    { timeout: 15000 },
+    { timeout: 20000 },
   )
   await expect(page.locator('[data-test=limits-events]')).toContainText(
     'GREEN',
-    { timeout: 15000 },
+    { timeout: 20000 },
   )
 })

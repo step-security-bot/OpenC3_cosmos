@@ -53,6 +53,13 @@ export class Utilities {
     await expect(
       this.page.locator('[data-test="select-target"]'),
     ).toContainText(target)
+
+    // Wait for packets to load after target change (internalDisabled cycle)
+    await expect(
+      this.page.locator('[data-test="select-packet"] input'),
+    ).toBeEnabled()
+    await this.sleep(100) // Give the menu a little more time to load
+
     if (packet) {
       await this.sleep(500) // Wait for packets to populate
       await this.page.locator('[data-test=select-packet]').click()
@@ -61,7 +68,12 @@ export class Utilities {
         this.page.locator('[data-test="select-packet"]'),
       ).toContainText(packet)
       if (item) {
-        await this.sleep(500) // Wait for items to populate
+        // Wait for items to load after packet change
+        await expect(
+          this.page.locator('[data-test="select-item"] input'),
+        ).toBeEnabled()
+        await this.sleep(100) // Give the menu a little more time to load
+
         await this.page.locator('[data-test=select-item] i').click()
         // Need to fill the item to allow filtering since the item list can be long
         await this.page

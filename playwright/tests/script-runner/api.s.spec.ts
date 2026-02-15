@@ -13,7 +13,7 @@
 # GNU Affero General Public License for more details.
 #
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 */
 
@@ -24,10 +24,6 @@ test.use({
   toolPath: '/tools/scriptrunner',
   toolName: 'Script Runner',
 })
-
-// Most of these tests are super flaky when run in parallel with each other.
-// Just gonna disable parallelism for now.
-test.describe.configure({ mode: 'serial' })
 
 async function openFile(page, utils, filename) {
   await page.locator('[data-test=script-runner-file]').click()
