@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -252,7 +252,7 @@ module OpenC3
       # If a start_time is passed we're doing a QuestDB lookup and directly return the results
       # TODO: This currently does NOT support the override values
       if start_time
-        return tsdb_lookup(items, start_time: start_time, end_time: end_time)
+        return tsdb_lookup(items, start_time: start_time, end_time: end_time, scope: scope)
       end
 
       # First generate a lookup hash of all the items represented so we can query the CVT
