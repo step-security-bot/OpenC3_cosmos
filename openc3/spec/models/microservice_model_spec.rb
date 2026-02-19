@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2022, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -172,6 +172,36 @@ module OpenC3
         expect(json['target_names']).to include("TARGET1", "TARGET2")
         expect(json['cmd']).to eql ["ruby", "run.rb", "--switch"]
         expect(json['options']).to include(["NAME1", "VALUE1"], ["NAME2", "VALUE2"])
+        tf.unlink
+      end
+
+      it "replaces python executable in CMD with OPENC3_PYTHON_BIN" do
+        ['python', 'python3', 'python3.11', 'python3.11.2'].each do |exe|
+          model = MicroserviceModel.new(folder_name: "TEST", name: "DEFAULT__TYPE__NAME", scope: "DEFAULT")
+          parser = ConfigParser.new
+          tf = Tempfile.new
+          tf.puts "CMD #{exe} start.py"
+          tf.close
+          parser.parse_file(tf.path) do |keyword, params|
+            model.handle_config(parser, keyword, params)
+          end
+          expected_bin = ENV['OPENC3_PYTHON_BIN'] || '/openc3/python/.venv/bin/python'
+          expect(model.as_json()['cmd']).to(eql([expected_bin, "start.py"]), "failed for exe: #{exe}")
+          tf.unlink
+        end
+      end
+
+      it "replaces python executable in CMD when given as a quoted single string" do
+        model = MicroserviceModel.new(folder_name: "TEST", name: "DEFAULT__TYPE__NAME", scope: "DEFAULT")
+        parser = ConfigParser.new
+        tf = Tempfile.new
+        tf.puts "CMD 'python start.py'"
+        tf.close
+        parser.parse_file(tf.path) do |keyword, params|
+          model.handle_config(parser, keyword, params)
+        end
+        expected_bin = ENV['OPENC3_PYTHON_BIN'] || '/openc3/python/.venv/bin/python'
+        expect(model.as_json()['cmd']).to eql [expected_bin, "start.py"]
         tf.unlink
       end
 
