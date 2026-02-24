@@ -107,5 +107,56 @@ line-length = 120
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Assume Python 3.12
-target-version = "py312"
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
+
+[tool.ruff.lint.pydocstyle]
+# Use Google-style docstrings
+convention = "google"
+
+[tool.ruff.lint.isort]
+# Group imports: standard library, third-party, first-party
+known-first-party = ["openc3"]
+# Add blank line between import groups
+lines-after-imports = 2
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Use spaces for indentation
+indent-style = "space"
+# Maintain existing line endings
+line-ending = "auto"
+# Enable auto-formatting of docstrings
+docstring-code-format = true
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = ["--verbose", "--strict-markers", "--strict-config", "--tb=short"]
+filterwarnings = [
+    # valkey's internal FLUSHALL implementation calls get_connection with a
+    # deprecated argument - not actionable from our code, suppress until fixed upstream
+    "ignore:Call to 'get_connection' function with deprecated usage:DeprecationWarning:valkey",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["openc3"]
+omit = ["*/test/*", "*/tests/*", "*/__pycache__/*", "*/site-packages/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+]
