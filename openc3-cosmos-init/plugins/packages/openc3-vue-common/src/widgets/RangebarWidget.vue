@@ -74,7 +74,7 @@ export default {
   methods: {
     calcPosition() {
       let value = this.screenValues[this.valueId][0]
-      if (!value) {
+      if (value == null) {
         return 0
       }
       if (value.raw) {
