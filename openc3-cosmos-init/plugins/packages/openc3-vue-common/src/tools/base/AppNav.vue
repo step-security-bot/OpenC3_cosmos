@@ -50,6 +50,7 @@
       <v-treeview
         :items="items"
         :opened="initiallyOpen"
+        :activated="activeItems"
         item-value="name"
         density="compact"
         class="ml-2"
@@ -195,6 +196,7 @@ export default {
       appNav: {},
       logo: '/img/logo.png',
       initiallyOpen: [],
+      activeItems: [],
       showUpgradeToEnterpriseDialog: false,
       chromeless: null,
     }
@@ -340,6 +342,7 @@ export default {
         start({
           urlRerouteOnly: true,
         })
+        this.updateActiveItem()
 
         // Check every minute if we need to update our token
         setInterval(() => {
@@ -352,8 +355,30 @@ export default {
       },
     )
   },
+  mounted() {
+    globalThis.addEventListener(
+      'single-spa:routing-event',
+      this.updateActiveItem,
+    )
+  },
+  beforeUnmount() {
+    globalThis.removeEventListener(
+      'single-spa:routing-event',
+      this.updateActiveItem,
+    )
+  },
   methods: {
     navigateToUrl,
+    updateActiveItem() {
+      const path = globalThis.location.pathname
+      const allTools = this.items.flatMap((item) =>
+        item.children ? item.children : [item],
+      )
+      const match = allTools.find(
+        (tool) => tool.url && path.startsWith(tool.url),
+      )
+      this.activeItems = match ? [match.name] : []
+    },
     newTabUrl(tool) {
       let url = null
       try {
