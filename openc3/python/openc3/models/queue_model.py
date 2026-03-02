@@ -1,4 +1,4 @@
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -53,7 +53,9 @@ class QueueModel(Model):
     # because it is being called by the cmd_api.py _cmd_implementation.
     # However we need a lot of methods to enable cls.get_model and model.notify
     @classmethod
-    def queue_command(cls, name: str, command: str, username: str, scope: str):
+    def queue_command(
+        cls, name: str, command: str, username: str, scope: str, validate: bool = True, timeout: float = None
+    ):
         model = cls.get_model(name=name, scope=scope)
         if not model:
             raise QueueError(f"Queue '{name}' not found in scope '{scope}'")
@@ -65,7 +67,13 @@ class QueueModel(Model):
             else:
                 index = float(result[0][1]) + 1
 
-            command_data = {"username": username, "value": command, "timestamp": time.time_ns()}
+            command_data = {
+                "username": username,
+                "value": command,
+                "validate": validate,
+                "timeout": timeout,
+                "timestamp": time.time_ns(),
+            }
             Store.zadd(f"{scope}:{name}", {json.dumps(command_data): index})
             model.notify(kind="command")
         else:

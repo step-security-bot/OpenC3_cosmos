@@ -1,4 +1,4 @@
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -688,7 +688,9 @@ def _cmd_implementation(
     if queue:
         # Pull the command out of the script string, e.g. cmd("INST ABORT")
         queued = cmd_string.split('("')[1].split('")')[0]
-        QueueModel.queue_command(queue, command=queued, username=username, scope=scope)
+        QueueModel.queue_command(
+            queue, command=queued, username=username, scope=scope, validate=validate, timeout=timeout
+        )
     else:
         CommandTopic.send_command(command, timeout=timeout, scope=scope)
     return command

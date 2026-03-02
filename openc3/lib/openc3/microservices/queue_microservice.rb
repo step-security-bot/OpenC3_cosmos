@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -76,10 +76,14 @@ module OpenC3
               else
                 cmd_params = {}
               end
-              cmd(command['target_name'], command['cmd_name'], cmd_params, queue: false, scope: @scope)
+              validate = command.key?('validate') ? command['validate'] : true
+              timeout = command['timeout']
+              cmd(command['target_name'], command['cmd_name'], cmd_params, queue: false, validate: validate, timeout: timeout, scope: @scope)
             elsif command['value']
               # Legacy format: use single string parameter for backwards compatibility
-              cmd(command['value'], queue: false, scope: @scope)
+              validate = command.key?('validate') ? command['validate'] : true
+              timeout = command['timeout']
+              cmd(command['value'], queue: false, validate: validate, timeout: timeout, scope: @scope)
             else
               @logger.error "QueueProcessor: Invalid command format, missing required fields"
             end
