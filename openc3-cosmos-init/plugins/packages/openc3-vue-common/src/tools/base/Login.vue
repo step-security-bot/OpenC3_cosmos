@@ -174,6 +174,13 @@ export default {
         .catch((error) => {
           if (error?.status === 401) {
             this.alert = 'Incorrect password'
+          } else if (error?.status === 429) {
+            this.alert = 'Please try again later'
+          } else if (
+            error?.response?.data?.message === 'invalid password hash'
+          ) {
+            this.alert =
+              'Please see the migration guide for upgrading to COSMOS 7 in our docs.'
           } else {
             this.alert = error.message || 'Something went wrong...'
           }

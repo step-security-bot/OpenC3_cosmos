@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2024, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -69,7 +69,12 @@ module OpenC3
       @@token_cache_time = time
       return true if @@token_cache == token_hash
 
-      return false
+      # Check stored password hash
+      pw_hash = Store.get(PRIMARY_KEY)
+      raise "invalid password hash" if pw_hash.nil? || !pw_hash.start_with?("$argon2") # Catch users who didn't run the migration utility when upgrading to COSMOS 7
+      @@pw_hash_cache = pw_hash
+      @@pw_hash_cache_time = time
+      return Argon2::Password.verify_password(token, @@pw_hash_cache)
     end
 
     def self.set(token, old_token, key = PRIMARY_KEY)

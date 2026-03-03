@@ -13,7 +13,7 @@
 # GNU Affero General Public License for more details.
 #
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 */
 
@@ -52,11 +52,9 @@ test('saves, opens, and resets the configuration', async ({ page, utils }) => {
 
   // Add a new component with a different type
   await page.locator('[data-test=new-tab]').click()
-  await page
-    .getByRole('combobox')
-    .filter({ hasText: 'COSMOS Packet Raw/Decom' })
-    .click()
-  await page.getByText('Current Time').click()
+  await page.locator('[data-test=select-component]').click()
+  await page.getByRole('option', { name: 'Current Time' }).click()
+  await utils.sleep(100) // Wait for TPI chooser to be clickable
   await utils.selectTargetPacketItem('INST', 'HEALTH_STATUS')
   await page.locator('[data-test=select-send]').click() // add the packet to the list
   await page.locator('[data-test=add-component]').click()
