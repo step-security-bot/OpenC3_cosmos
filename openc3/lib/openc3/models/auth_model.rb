@@ -96,7 +96,11 @@ module OpenC3
         raise "old_password must not be nil or empty" if old_password.nil? or old_password.empty?
         raise "old_password incorrect" unless verify_no_service(old_password, mode: :password)
       end
-      Store.set(key, hash(token))
+      pw_hash = Argon2::Password.create(password, profile: ARGON2_PROFILE)
+      Store.set(key, pw_hash)
+      @@pw_hash_cache = nil
+      @@pw_hash_cache_time = nil
+      logout
     end
 
     def self.generate_session
