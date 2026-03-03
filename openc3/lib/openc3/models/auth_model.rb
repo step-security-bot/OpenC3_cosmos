@@ -48,33 +48,44 @@ module OpenC3
       service_password = ENV['OPENC3_SERVICE_PASSWORD']
       return true if service_password and service_password == token
 
-      return verify_no_service(token)
+      return false if service_only
+
+      mode = no_password ? :token : :any
+      return verify_no_service(token, mode: mode)
     end
 
-    def self.verify_no_service(token)
+    # Checks whether the provided token is a valid user password or session token.
+    # @param token [String] the plaintext password or session token to check (required)
+    # @param mode [String] optionally restrict verification to just the password or token. Valid values: :password, :token, or :any (default :token)
+    # @return [Boolean] whether the provided password/token is valid
+    def self.verify_no_service(token, mode: :token)
+      modes = [:password, :token, :any]
+      raise ArgumentError, "Invalid mode '#{mode}': must be one of #{modes}" unless modes.include?(mode)
+
       return false if token.nil? or token.empty?
 
       time = Time.now
-      return true if @@session_cache and (time - @@session_cache_time) < SESSION_CACHE_TIMEOUT and @@session_cache[token]
-      token_hash = hash(token)
-      return true if @@token_cache and (time - @@token_cache_time) < TOKEN_CACHE_TIMEOUT and @@token_cache == token_hash
+      unless mode == :password
+        return true if @@session_cache and (time - @@session_cache_time) < SESSION_CACHE_TIMEOUT and @@session_cache[token]
 
-      # Check sessions
-      @@session_cache = Store.hgetall(SESSIONS_KEY)
-      @@session_cache_time = time
-      return true if @@session_cache[token]
+        # Check stored session tokens
+        @@session_cache = Store.hgetall(SESSIONS_KEY)
+        @@session_cache_time = time
+        return true if @@session_cache[token]
+      end
 
-      # Check Direct password
-      @@token_cache = Store.get(PRIMARY_KEY)
-      @@token_cache_time = time
-      return true if @@token_cache == token_hash
+      unless mode == :token
+        return true if @@pw_hash_cache and (time - @@pw_hash_cache_time) < PW_HASH_CACHE_TIMEOUT and Argon2::Password.verify_password(token, @@pw_hash_cache)
 
-      # Check stored password hash
-      pw_hash = Store.get(PRIMARY_KEY)
-      raise "invalid password hash" if pw_hash.nil? || !pw_hash.start_with?("$argon2") # Catch users who didn't run the migration utility when upgrading to COSMOS 7
-      @@pw_hash_cache = pw_hash
-      @@pw_hash_cache_time = time
-      return Argon2::Password.verify_password(token, @@pw_hash_cache)
+        # Check stored password hash
+        pw_hash = Store.get(PRIMARY_KEY)
+        raise "invalid password hash" if pw_hash.nil? || !pw_hash.start_with?("$argon2") # Catch users who didn't run the migration utility when upgrading to COSMOS 7
+        @@pw_hash_cache = pw_hash
+        @@pw_hash_cache_time = time
+        return true if Argon2::Password.verify_password(token, @@pw_hash_cache)
+      end
+
+      return false
     end
 
     def self.set(token, old_token, key = PRIMARY_KEY)
@@ -82,8 +93,8 @@ module OpenC3
       raise "token must be at least 8 characters" if token.length < MIN_TOKEN_LENGTH
 
       if set?(key)
-        raise "old_token must not be nil or empty" if old_token.nil? or old_token.empty?
-        raise "old_token incorrect" unless verify(old_token)
+        raise "old_password must not be nil or empty" if old_password.nil? or old_password.empty?
+        raise "old_password incorrect" unless verify_no_service(old_password, mode: :password)
       end
       Store.set(key, hash(token))
     end
