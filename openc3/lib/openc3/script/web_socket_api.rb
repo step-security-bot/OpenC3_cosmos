@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 
-# Copyright 2023 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -126,7 +126,7 @@ module OpenC3
     # Connect to the websocket with authorization in query params
     def connect
       disconnect()
-      final_url = @url + "?scope=#{@scope}&authorization=#{@authentication.token(include_bearer: false)}"
+      final_url = @url + "?scope=#{@scope}&authorization=#{@authentication.get_otp(scope: @scope)}"
       @stream = WebSocketClientStream.new(final_url, @write_timeout, @read_timeout, @connect_timeout)
       @stream.headers = {
         'Sec-WebSocket-Protocol' => 'actioncable-v1-json, actioncable-unsupported',

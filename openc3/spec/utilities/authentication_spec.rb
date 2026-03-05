@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -32,7 +32,12 @@ module OpenC3
       it "initializes with OPENC3_API_PASSWORD" do
         ENV['OPENC3_API_PASSWORD'] = 'test_password'
         auth = OpenC3Authentication.new
-        expect(auth.token).to eq('test_password')
+        # Initialization calls a method that uses Faraday to get a token from the server.
+        # It's mocked to return $openc3_mock_token for unit testing.
+        expect(auth.token).to eq($openc3_mock_token)
+
+        # Once initialized, it should be able to get an OTP as well
+        expect(auth.get_otp).to eq($openc3_mock_otp)
       end
     end
 

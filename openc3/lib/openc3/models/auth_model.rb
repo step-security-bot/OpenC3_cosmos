@@ -38,6 +38,9 @@ module OpenC3
 
     MIN_TOKEN_LENGTH = 8
 
+    SESSION_PREFIX = "ses_"
+    OTP_PREFIX = "otp_"
+
     def self.set?(key = PRIMARY_KEY)
       Store.exists(key) == 1
     end
@@ -66,12 +69,18 @@ module OpenC3
 
       time = Time.now
       unless mode == :password
-        return true if @@session_cache and (time - @@session_cache_time) < SESSION_CACHE_TIMEOUT and @@session_cache[token]
+        if @@session_cache and (time - @@session_cache_time) < SESSION_CACHE_TIMEOUT and @@session_cache[token]
+          terminate_otp(token)
+          return true
+        end
 
         # Check stored session tokens
         @@session_cache = Store.hgetall(SESSIONS_KEY)
         @@session_cache_time = time
-        return true if @@session_cache[token]
+        if @@session_cache[token]
+          terminate_otp(token)
+          return true
+        end
       end
 
       unless mode == :token
@@ -103,8 +112,16 @@ module OpenC3
       logout
     end
 
-    def self.generate_session
+    # Creates a new session token. DO NOT CALL BEFORE VERIFYING.
+    # @param otp [Boolean] whether to create a one-time use token (default: false)
+    # @return [String] the new session token
+    def self.generate_session(otp: false)
       token = SecureRandom.urlsafe_base64(nil, false)
+      if otp
+        token = OTP_PREFIX + token
+      else
+        token = SESSION_PREFIX + token
+      end
       Store.hset(SESSIONS_KEY, token, Time.now.iso8601)
       return token
     end
@@ -117,6 +134,17 @@ module OpenC3
 
     def self.hash(token)
       Digest::SHA2.hexdigest token
+    end
+
+    # Terminates the given session token.
+    def self.terminate(token)
+      Store.hdel(SESSIONS_KEY, token)
+      @@session_cache.delete(token) if @@session_cache
+    end
+
+    # Terminates the session if the token is an OTP.
+    def self.terminate_otp(token)
+      terminate(token) if token.start_with?(OTP_PREFIX)
     end
   end
 end

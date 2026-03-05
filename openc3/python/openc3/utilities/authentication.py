@@ -1,4 +1,4 @@
-# Copyright 2023 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -40,6 +40,25 @@ class OpenC3Authentication:
 
     def token(self, include_bearer=True):
         return self._token
+
+    def get_otp(self, scope="DEFAULT"):
+        if not self._token:
+            raise OpenC3AuthenticationError("Uninitialized authentication: unable to get OTP")
+        response = Session().get(
+            self._generate_auth_url("/auth/otp"),
+            params={"scope": scope},
+            headers={"Authorization": self.token()},
+        )
+        return response.text
+
+    def _generate_auth_url(self, endpoint=None):
+        schema = OPENC3_API_SCHEMA or "http"
+        hostname = OPENC3_API_HOSTNAME or ("127.0.0.1" if OPENC3_DEVEL else "openc3-cosmos-cmd-tlm-api")
+        port = OPENC3_API_PORT or "2901"
+        port = int(port)
+        if endpoint is None:
+            endpoint = "auth/verify_service" if self.service else "auth/verify"
+        return f"{schema}://{hostname}:{port}/openc3-api/{endpoint}"
 
 
 # OpenC3 enterprise Keycloak authentication code

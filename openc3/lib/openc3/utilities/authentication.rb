@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2023, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -37,11 +37,73 @@ module OpenC3
       if @token.nil?
         raise OpenC3AuthenticationError, "Authentication requires environment variable OPENC3_API_PASSWORD"
       end
+      @service = password == ENV['OPENC3_SERVICE_PASSWORD']
+      retry_faraday_request do
+        response = _make_auth_request(password)
+        @token = response.body
+      end
+      if @token.nil? or @token.empty?
+        raise OpenC3AuthenticationError, "Authentication failed. Please check the password in the environment variable OPENC3_API_PASSWORD"
+      end
     end
 
     # Load the token from the environment
     def token(include_bearer: true)
       @token
+    end
+
+    def get_otp(scope: 'DEFAULT')
+      if @token.nil? or @token.empty?
+        raise OpenC3AuthenticationError, "Uninitialized authentication: unable to get OTP"
+      end
+      retry_faraday_request do
+        response = _make_otp_request(scope: scope)
+        return response.body
+      end
+    end
+
+    def _make_auth_request(password)
+      Faraday.new.post(_generate_auth_url, '{"password": "' + password + '"}', {'Content-Type' => 'application/json'})
+    end
+
+    def _make_otp_request(scope: 'DEFAULT')
+      params = {
+        'scope' => scope
+      }
+      headers = {
+        'Authorization' => token,
+      }
+      Faraday.new.get(_generate_auth_url('/auth/otp'), params, headers)
+    end
+
+    def _generate_auth_url(endpoint = nil)
+      schema = ENV['OPENC3_API_SCHEMA'] || 'http'
+      hostname = ENV['OPENC3_API_HOSTNAME'] || (ENV['OPENC3_DEVEL'] ? '127.0.0.1' : 'openc3-cosmos-cmd-tlm-api')
+      port = ENV['OPENC3_API_PORT'] || '2901'
+      port = port.to_i
+      unless endpoint
+        endpoint = if @service
+          "auth/verify_service"
+        else
+          "auth/verify"
+        end
+      end
+      return "#{schema}://#{hostname}:#{port}/openc3-api/#{endpoint}"
+    end
+
+    def retry_faraday_request(max_retries: 3)
+      retries = 0
+      begin
+        yield
+      rescue Faraday::ConnectionFailed, Faraday::TimeoutError => e
+        retries += 1
+        if retries <= max_retries
+          STDOUT.puts "Authentication request failed (attempt #{retries}/3): #{e.message}. Retrying in #{retries}s..."
+          sleep(retries)
+          retry
+        end
+        raise
+      end
     end
   end
 
