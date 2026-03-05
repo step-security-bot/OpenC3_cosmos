@@ -25,6 +25,14 @@ on:
     branches:
       - "**"
 
+# Don't cancel playwright because each run can expose different race conditions and issues
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#   cancel-in-progress: true
+
+env:
+  OPENC3_ARGON2_PROFILE: "unsafe_cheapest"
+
 jobs:
   openc3-build-test:
     if: ${{ github.actor != 'dependabot[bot]' }}
