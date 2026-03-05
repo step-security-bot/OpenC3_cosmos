@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -78,6 +78,8 @@ module OpenC3
       authorize(permission: 'admin', manual: manual, scope: scope, token: token)
       SettingModel.set({ name: name, data: data }, scope: scope)
       LocalMode.save_setting(scope, name, data)
+      username = user_info(token)['username'] || 'Anonymous'
+      Logger.info("User #{username} saved setting '#{name}': #{data}", scope: scope, user: username)
     end
     # save_setting is DEPRECATED
     alias save_setting set_setting

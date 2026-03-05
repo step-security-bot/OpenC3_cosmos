@@ -1,4 +1,4 @@
-# Copyright 2023 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -151,6 +151,20 @@ class Model:
         self.destroyed = True
         self.undeploy()
         self.store().hdel(self.primary_key, self.name)
+
+    def diff(self, existing):
+        """Compare this model's as_json with a previous dict and return a list
+        of human-readable change descriptions (e.g. "key: old -> new").
+        Skips the updated_at field since it always changes."""
+        changes = []
+        new_json = self.as_json()
+        for key, old_value in existing.items():
+            if key == "updated_at":
+                continue
+            new_value = new_json.get(key)
+            if old_value != new_value:
+                changes.append(f"{key}: {old_value} -> {new_value}")
+        return changes
 
     def as_json(self):
         """

@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2022, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -197,6 +197,22 @@ module OpenC3
         'updated_at' => @updated_at,
         'plugin' => @plugin,
         'scope' => @scope }
+    end
+
+    # Compare this model's as_json with a previous Hash and return an array
+    # of human-readable change descriptions (e.g. "key: old -> new").
+    # Skips the updated_at field since it always changes.
+    # @param existing [Hash] the previous model state (from .get)
+    # @return [Array<String>] list of changed fields
+    def diff(existing)
+      changes = []
+      new_json = as_json
+      existing.each do |key, old_value|
+        next if key == 'updated_at'
+        new_value = new_json[key]
+        changes << "#{key}: #{old_value} -> #{new_value}" if old_value != new_value
+      end
+      changes
     end
 
     def check_disable_erb(filename)
