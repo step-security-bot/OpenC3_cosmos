@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2025, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -62,6 +62,61 @@ class StreamingApi
     end
   end
 
+  # Expand ANY packet key containing COSMOS_ALL into individual packet keys.
+  # Supports:
+  #   MODE__CMDORTLM__COSMOS_ALL[__VALUETYPE]          - all targets, all packets
+  #   MODE__CMDORTLM__TARGET__COSMOS_ALL[__VALUETYPE]  - one target, all packets
+  # Unauthorized packets are silently skipped (Option A).
+  def expand_all_packets(data, scope:)
+    return unless data["packets"]
+
+    expanded = []
+    data["packets"].each do |key|
+      parts = key.upcase.split('__')
+      mode = parts[0]
+      cmd_or_tlm = parts[1]
+
+      if parts[2] == 'COSMOS_ALL'
+        # MODE__CMDORTLM__COSMOS_ALL[__VALUETYPE]
+        value_type = parts[3]
+        type = (cmd_or_tlm == 'CMD') ? :CMD : :TLM
+        targets = OpenC3::TargetModel.names(scope: scope)
+        targets.each do |target_name|
+          next if target_name == 'UNKNOWN' and mode != 'RAW'
+
+          begin
+            packets = OpenC3::TargetModel.packets(target_name, type: type, scope: scope)
+          rescue RuntimeError
+            next
+          end
+          packets.each do |packet|
+            pkt_key = "#{mode}__#{cmd_or_tlm}__#{target_name}__#{packet['packet_name']}"
+            pkt_key += "__#{value_type}" if value_type
+            expanded << pkt_key
+          end
+        end
+      elsif parts[3] == 'COSMOS_ALL'
+        # MODE__CMDORTLM__TARGET__COSMOS_ALL[__VALUETYPE]
+        target_name = parts[2]
+        value_type = parts[4]
+        type = (cmd_or_tlm == 'CMD') ? :CMD : :TLM
+        begin
+          packets = OpenC3::TargetModel.packets(target_name, type: type, scope: scope)
+        rescue RuntimeError
+          next
+        end
+        packets.each do |packet|
+          pkt_key = "#{mode}__#{cmd_or_tlm}__#{target_name}__#{packet['packet_name']}"
+          pkt_key += "__#{value_type}" if value_type
+          expanded << pkt_key
+        end
+      else
+        expanded << key
+      end
+    end
+    data["packets"] = expanded
+  end
+
   # Request to add data to the stream
   #
   # data format:
@@ -82,7 +137,8 @@ class StreamingApi
   #   CMDORTLM - CMD or TLM
   #   TARGET - Target name
   #   PACKET - Packet name
-  #   VALUETYPE - RAW, CONVERTED, FORMATTED, WITH_UNITS, or PURE (pure means all types as stored in log)
+  #   VALUETYPE - RAW, CONVERTED, FORMATTED, or PURE (pure means all types as stored in log)
+  #   Use ALL in place of TARGET or PACKET to subscribe to all targets/packets
   #
   def add(data)
     # OpenC3::Logger.debug "start:#{Time.at(data["start_time"].to_i/1_000_000_000.0).formatted}" if data["start_time"]
@@ -96,6 +152,9 @@ class StreamingApi
       scope = data["scope"]
       token = data["token"]
 
+      # Expand ALL wildcards in packets before building the collection
+      expand_all_packets(data, scope: scope)
+
       # Build the collection of streaming objects for this request
       collection = StreamingObjectCollection.new
       if data["items"]
@@ -103,7 +162,11 @@ class StreamingApi
       end
       if data["packets"]
         data["packets"].each do |key|
-          collection.add(StreamingObject.new(key, start_time, end_time, scope: scope, token: token))
+          begin
+            collection.add(StreamingObject.new(key, start_time, end_time, scope: scope, token: token))
+          rescue OpenC3::AuthError, OpenC3::ForbiddenError
+            OpenC3::Logger.info("Skipping unauthorized packet: #{key}")
+          end
         end
       end
 
@@ -151,6 +214,9 @@ class StreamingApi
     scope = data["scope"]
     token = data["token"]
 
+    # Expand ALL wildcards in packets before building the collection
+    expand_all_packets(data, scope: scope)
+
     # Build the collection of streaming objects for this request
     collection = StreamingObjectCollection.new
     if data["items"]
@@ -158,7 +224,11 @@ class StreamingApi
     end
     if data["packets"]
       data["packets"].each do |key|
-        collection.add(StreamingObject.new(key, nil, nil, scope: scope, token: token))
+        begin
+          collection.add(StreamingObject.new(key, nil, nil, scope: scope, token: token))
+        rescue OpenC3::AuthError, OpenC3::ForbiddenError
+          OpenC3::Logger.info("Skipping unauthorized packet: #{key}")
+        end
       end
     end
 

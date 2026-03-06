@@ -131,6 +131,10 @@ def mock_redis(self):
     patcher = patch("redis.Redis", return_value=redis)
     patcher.start()
     self.addCleanup(patcher.stop)
+    EphemeralStore.my_instance = None
+    Store.my_instance = None
+    EphemeralStoreQueued.my_instance = None
+    StoreQueued.my_instance = None
     return redis
 
 
