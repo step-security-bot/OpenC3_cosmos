@@ -320,7 +320,7 @@ export default {
         description: 'UNKNOWN',
       },
       LATEST: {
-        label: 'LATEST',
+        label: '[ LATEST ]',
         value: 'LATEST',
         description: 'Latest values from all packets',
       }, // Constant to indicate latest values from all packets
@@ -379,7 +379,11 @@ export default {
       let i = this.itemNames.findIndex(
         (item) => item.value === this.selectedItemName,
       )
-      if (i === -1 || Number.isNaN(this.itemNames[i].array)) {
+      if (
+        i === -1 ||
+        this.itemNames[i].array === undefined ||
+        Number.isNaN(this.itemNames[i].array)
+      ) {
         return false
       } else {
         return true
@@ -525,11 +529,11 @@ export default {
             value: name,
           }
         })
-        if (this.allowAll) {
-          this.packetNames.unshift(this.ALL)
-        }
         if (this.includeLatestPacketInDropdown) {
           this.packetNames.unshift(this.LATEST)
+        }
+        if (this.allowAll) {
+          this.packetNames.unshift(this.ALL)
         }
         if (!this.selectedPacketName) {
           if (this.packetNames.length === 0) {
