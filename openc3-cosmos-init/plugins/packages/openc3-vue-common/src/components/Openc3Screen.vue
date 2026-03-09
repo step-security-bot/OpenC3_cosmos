@@ -1024,11 +1024,7 @@ export default {
             if (data && data.length > 0) {
               this.updateValues(data)
               // Clear transient request errors on successful fetch
-              this.errors = this.errors.filter(
-                (error) =>
-                  error.type !== 'error' ||
-                  !error.message.includes('Request error'),
-              )
+              this.errors = this.errors.filter((error) => !error.transient)
             }
           })
           .catch((error) => {
@@ -1043,6 +1039,7 @@ export default {
                   type: 'error',
                   message: message,
                   time: new Date().getTime(),
+                  transient: true,
                 })
               }
             }
