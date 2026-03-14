@@ -1,4 +1,4 @@
-# Copyright 2024 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -113,6 +113,14 @@ def open_file_dialog(title, message="Open File", filter=None):
 
 def open_files_dialog(title, message="Open File", filter=None):
     _file_dialog(title, message, filter)
+
+
+def open_bucket_dialog(title, message="Open Bucket File"):
+    answer = ""
+    while len(answer) == 0:
+        print(f"{title}\n{message}\n<Type bucket file path (e.g. BUCKET/path/to/file)>:")
+        answer = input()
+    return answer
 
 
 def prompt(

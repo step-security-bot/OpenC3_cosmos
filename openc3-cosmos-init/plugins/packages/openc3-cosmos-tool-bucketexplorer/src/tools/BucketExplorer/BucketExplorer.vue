@@ -70,7 +70,7 @@
         </v-btn>
         <v-text-field
           v-model="search"
-          label="Search"
+          label="Search current directory"
           prepend-inner-icon="mdi-magnify"
           clearable
           variant="outlined"

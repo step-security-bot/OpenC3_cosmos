@@ -185,6 +185,7 @@ try:
                             | "metadata_input"
                             | "open_file_dialog"
                             | "open_files_dialog"
+                            | "open_bucket_dialog"
                         ):
                             if running_script.prompt_id is not None:
                                 if (
@@ -204,6 +205,12 @@ try:
                                             script_id,
                                             f"Multiple input: {running_script.user_input}",
                                         )
+                                    elif parsed_cmd["method"] == "open_bucket_dialog":
+                                        answer = parsed_cmd["answer"]
+                                        if isinstance(answer, str):
+                                            answer = json.loads(answer)
+                                        running_script.user_input = answer
+                                        run_script_log(script_id, f"Bucket file: {running_script.user_input}")
                                     elif "open_file" in parsed_cmd["method"]:
                                         running_script.user_input = parsed_cmd["answer"]
                                         run_script_log(script_id, f"File(s): {running_script.user_input}")

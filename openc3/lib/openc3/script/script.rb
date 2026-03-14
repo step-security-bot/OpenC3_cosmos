@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 
 # Modified by OpenC3, Inc.
-# All changes Copyright 2023, OpenC3, Inc.
+# All changes Copyright 2026, OpenC3, Inc.
 # All Rights Reserved
 #
 # This file may also be used under the terms of a commercial license
@@ -202,6 +202,16 @@ module OpenC3
 
     def open_files_dialog(title, message = "Open File(s)", filter:)
       _file_dialog(title, message, filter)
+    end
+
+    def open_bucket_dialog(title, message = "Open Bucket File")
+      answer = ''
+      while answer.empty?
+        print "#{title}\n#{message}\n<Type bucket file path (e.g. BUCKET/path/to/file)>:"
+        answer = gets
+        answer.chomp!
+      end
+      return answer
     end
 
     def prompt(string, text_color: nil, background_color: nil, font_size: nil, font_family: nil, details: nil)
