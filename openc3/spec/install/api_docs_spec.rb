@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 
-# Copyright 2025 OpenC3, Inc.
+# Copyright 2026 OpenC3, Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can modify and/or redistribute it
@@ -99,7 +99,7 @@ module OpenC3
       File.open(File.join(SPEC_DIR,'../../docs.openc3.com/docs/guides/scripting-api.md')) do |file|
         apis = false
         file.each do |line|
-          if line.strip.include?('###')
+          if line.strip.include?('###') && !line.strip.include?('####') # Only look at ### headings, not #### headings
             if line.include?("Migration")
               apis = true
               next
